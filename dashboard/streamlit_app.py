@@ -996,22 +996,27 @@ def main():
 
     display_header(user_context)
 
-    overview_tab, sales_tab, add_tab, pay_tab, queries_tab = st.tabs(["Overview", "Sales", "Add Sale", "Add Payment", "Query Reports"], key="main_navigation_tabs")
+    tab_titles = ["Overview", "Sales", "Add Sale", "Add Payment"]
+    if user["role"] == "super_admin":
+        tab_titles.append("Query Reports")
 
-    with overview_tab:
+    tabs = st.tabs(tab_titles, key="main_navigation_tabs")
+
+    with tabs[0]:
         render_overview(user_context, start_date, end_date, product_filter)
 
-    with sales_tab:
+    with tabs[1]:
         render_sales_table(user_context, start_date, end_date, product_filter)
 
-    with add_tab:
+    with tabs[2]:
         render_add_sale(user_context)
         
-    with pay_tab:
+    with tabs[3]:
         render_add_payment(user_context)
         
-    with queries_tab:
-        render_query_reports()
+    if user["role"] == "super_admin":
+        with tabs[4]:
+            render_query_reports()
 
 
 if __name__ == "__main__":
