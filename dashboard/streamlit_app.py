@@ -412,7 +412,7 @@ def display_header(user):
         display_role = st.session_state.user['role']
         st.metric("System Role", f"{display_role.replace('_', ' ').title()}")
     with col3:
-        if user["role"] == "super_admin":
+        if st.session_state.user["role"] == "super_admin":
             scope_label = "All Branches"
         else:
             if "branch_name" in user and user["branch_name"]:
@@ -911,13 +911,19 @@ def main():
             
         branches = get_branch_list()
         options = ["All Branches"] + [f"{branch['branch_id']} - {branch['branch_name']}" for branch in branches]
-        
+
+        def reset_branch_callback():
+            st.session_state["filter_branch"] = "All Branches"
+
         with col_bf_r:
-            if st.button("↻", key="reset_branch", use_container_width=True, help="Reset Branch Filter"):
-                st.session_state["filter_branch"] = options[0]
-                st.rerun()
+            st.button("↻", key="reset_branch", on_click=reset_branch_callback, use_container_width=True, help="Reset Branch Filter")
                 
-        selected_branch = st.sidebar.selectbox("Select Branch", options, label_visibility="collapsed", key="filter_branch")
+        selected_branch = st.sidebar.selectbox(
+            "Select Branch", 
+            options, 
+            key="filter_branch",
+            label_visibility="collapsed"
+        )
         
         if selected_branch != "All Branches":
             branch_id_selected = int(selected_branch.split(" - ")[0])
@@ -925,9 +931,8 @@ def main():
             user_context["role"] = "admin"
             user_context["branch_id"] = branch_id_selected
             user_context["branch_name"] = branch_name_selected
-            active_scope = branch_name_selected
-        else:
-            active_scope = "All Branches"
+        
+        active_scope = "All Branches"
     else:
         active_scope = user.get("branch_name")
         if not active_scope:
@@ -966,11 +971,12 @@ def main():
         col_time, col_time_btn = st.columns([5, 1])
         with col_time:
             st.markdown("<span style='font-size: 13px; font-weight: 600; color: #334155; margin-left: 5px;'>Time Period</span>", unsafe_allow_html=True)
+        def reset_time_callback():
+            if "filter_start" in st.session_state: del st.session_state["filter_start"]
+            if "filter_end" in st.session_state: del st.session_state["filter_end"]
+
         with col_time_btn:
-            if st.button("↻", key="reset_time", use_container_width=True, help="Reset Time Filter"):
-                if "filter_start" in st.session_state: del st.session_state["filter_start"]
-                if "filter_end" in st.session_state: del st.session_state["filter_end"]
-                st.rerun()
+            st.button("↻", key="reset_time", on_click=reset_time_callback, use_container_width=True, help="Reset Time Filter")
                 
         col_start, col_end = st.columns(2)
         with col_start:
@@ -983,13 +989,29 @@ def main():
         col_prod, col_prod_btn = st.columns([5, 1])
         with col_prod:
             st.markdown("<span style='font-size: 13px; font-weight: 600; color: #334155; margin-left: 5px;'>Product Type</span>", unsafe_allow_html=True)
+        def reset_prod_callback():
+            st.session_state["filter_product"] = "All Products"
+
         with col_prod_btn:
-            if st.button("↻", key="reset_prod", use_container_width=True, help="Reset Product Filter"):
-                st.session_state["filter_product"] = "All Products"
-                st.rerun()
+            st.button("↻", key="reset_prod", on_click=reset_prod_callback, use_container_width=True, help="Reset Product Filter")
                 
-        product_filter_str = st.selectbox("Product", ["All Products", "DS", "DA", "BA", "FSD"], key="filter_product", label_visibility="collapsed")
+        product_filter_str = st.selectbox(
+            "Product", 
+            ["All Products", "DS", "DA", "BA", "FSD"], 
+            key="filter_product",
+            label_visibility="collapsed"
+        )
         product_filter = None if product_filter_str == "All Products" else product_filter_str
+
+        def clear_all_filters_callback():
+            if st.session_state.user["role"] == "super_admin":
+                st.session_state["filter_branch"] = "All Branches"
+            st.session_state["filter_product"] = "All Products"
+            if "filter_start" in st.session_state: del st.session_state["filter_start"]
+            if "filter_end" in st.session_state: del st.session_state["filter_end"]
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.button("🗑️ Clear All Filters", on_click=clear_all_filters_callback, use_container_width=True, type="secondary")
 
     st.sidebar.markdown("<h4 style='color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-top: 20px; margin-bottom: 10px; padding-left: 5px;'>Actions & Settings</h4>", unsafe_allow_html=True)
     show_logout()
