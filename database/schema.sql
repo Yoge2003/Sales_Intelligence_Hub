@@ -43,5 +43,5 @@ CREATE TABLE payment_splits (
     FOREIGN KEY (sale_id) REFERENCES customer_sales(sale_id)
 );
 
-
-
+select*from customer_sales;
+select*from users;countriescountriescountriescountry_code
